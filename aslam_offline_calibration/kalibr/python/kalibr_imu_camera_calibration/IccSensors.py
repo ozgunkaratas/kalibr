@@ -7,6 +7,9 @@ import bsplines
 import kalibr_common as kc
 import kalibr_errorterms as ket
 import IccCalibrator as ic
+from mpl_toolkits import mplot3d
+import matplotlib.pyplot as plt
+ax =plt.axes(projection='3d')
 
 import cv2
 import sys
@@ -133,6 +136,9 @@ class IccCamera():
         #initialize a pose spline using the camera poses
         poseSpline = self.initPoseSplineFromCamera( timeOffsetPadding=0.0 )
         
+        bsplines.plotPoseSpline(ax,poseSpline,dt=0.1,invert=False,linespec='b-')
+
+
         for im in imu.imuData:
             tk = im.stamp.toSec()
             if tk > poseSpline.t_min() and tk < poseSpline.t_max():        
@@ -143,6 +149,43 @@ class IccCamera():
                 #get the vision predicted omega and measured omega (IMU)
                 omega_predicted = R_i_c * aopt.EuclideanExpression( np.matrix( poseSpline.angularVelocityBodyFrame( tk ) ).transpose() )
                 omega_measured = im.omega
+                #print "printing omega_predicted orientation prior"
+                #f = open("omega_predicted_prior.txt", "a")
+                #f.write(str(omega_predicted))
+                #f.close()
+
+                print "printing omega_predicted orientation prior as matrix"
+                matrix = np.matrix( poseSpline.angularVelocityBodyFrame( tk ) ).transpose()
+                print matrix[0]
+                print "\n"
+                print matrix[1]
+                print "\n" 
+                print matrix[2]
+                print "\n"
+                print "new matrix elements"
+
+
+                f = open("X-omega_predicted_prior.txt", "a")
+                f.write(str(matrix[0]))
+		f.write("\n")
+                f.close()
+
+                f = open("Y-omega_predicted_prior.txt", "a")
+                f.write(str(matrix[1]))
+		f.write("\n")
+                f.close()
+
+                f = open("Z-omega_predicted_prior.txt", "a")
+                f.write(str(matrix[2]))
+		f.write("\n")
+                f.close()
+
+
+
+
+                #fid = open("matrixomega_predicted_prior.txt", "a")
+                #fid.write(str( (np.matrix( poseSpline.angularVelocityBodyFrame( tk ) ).transpose() )
+                #fid.close()
                 
                 #error term
                 gerr = ket.GyroscopeError(omega_measured, im.omegaInvR, omega_predicted, bias)
@@ -230,6 +273,15 @@ class IccCamera():
                 #get imu measurements and spline from camera
                 omega_measured = im.omega
                 omega_predicted = aopt.EuclideanExpression( np.matrix( poseSpline.angularVelocityBodyFrame( tk ) ).transpose() )
+
+
+
+                #print "printing omega_predicted"
+                #f = open("omega_predicted.txt", "a")
+                #f.write(str(omega_predicted))
+                #f.close()
+
+
 
                 #calc norm
                 t = np.hstack( (t, tk) )
